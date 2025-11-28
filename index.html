@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>とるキャス - 認証完了</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+      background-color: #f9fafb;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+      padding: 40px;
+      max-width: 480px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 24px;
+    }
+
+    .icon svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    h1 {
+      font-size: 20px;
+      font-weight: 700;
+      color: #1f2937;
+      margin-bottom: 8px;
+    }
+
+    .description {
+      font-size: 14px;
+      color: #6b7280;
+      margin-bottom: 24px;
+    }
+
+    .token-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: #6b7280;
+      text-align: left;
+      margin-bottom: 8px;
+    }
+
+    .token-box {
+      background: #f3f4f6;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-family: monospace;
+      font-size: 13px;
+      color: #374151;
+      word-break: break-all;
+      text-align: left;
+      margin-bottom: 16px;
+      max-height: 80px;
+      overflow-y: auto;
+    }
+
+    .copy-button {
+      width: 100%;
+      padding: 14px 24px;
+      font-size: 15px;
+      font-weight: 600;
+      color: white;
+      background: #0ea5e9;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .copy-button:hover {
+      background: #0284c7;
+    }
+
+    .copy-button.copied {
+      background: #10b981;
+    }
+
+    .error-container {
+      display: none;
+    }
+
+    .error-container.show {
+      display: block;
+    }
+
+    .error-icon {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 16px;
+      color: #ef4444;
+    }
+
+    .error-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1f2937;
+      margin-bottom: 8px;
+    }
+
+    .error-message {
+      font-size: 14px;
+      color: #6b7280;
+    }
+
+    .success-container {
+      display: none;
+    }
+
+    .success-container.show {
+      display: block;
+    }
+
+    .instructions {
+      background: #f0f9ff;
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 24px;
+      text-align: left;
+    }
+
+    .instructions-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #0369a1;
+      margin-bottom: 8px;
+    }
+
+    .instructions-text {
+      font-size: 13px;
+      color: #0c4a6e;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- 成功時の表示 -->
+    <div id="success" class="success-container">
+      <div class="icon">
+        <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="64" height="64" rx="14" fill="#0ea5e9"/>
+          <rect x="12" y="16" width="36" height="28" rx="6" fill="white"/>
+          <circle cx="48" cy="16" r="10" fill="#ef4444"/>
+        </svg>
+      </div>
+      <h1>認証が完了しました</h1>
+      <p class="description">以下のアクセストークンをコピーして、とるキャスに貼り付けてください</p>
+      
+      <div class="token-label">アクセストークン</div>
+      <div id="tokenBox" class="token-box"></div>
+      
+      <button id="copyButton" class="copy-button" onclick="copyToken()">
+        コピー
+      </button>
+
+      <div class="instructions">
+        <div class="instructions-title">次のステップ</div>
+        <div class="instructions-text">
+          1. 上の「コピー」ボタンを押す<br>
+          2. とるキャスの設定画面に戻る<br>
+          3. アクセストークン欄に貼り付けて保存
+        </div>
+      </div>
+    </div>
+
+    <!-- エラー時の表示 -->
+    <div id="error" class="error-container">
+      <div class="error-icon">
+        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="4"/>
+          <path d="M24 14V26" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+          <circle cx="24" cy="34" r="2" fill="currentColor"/>
+        </svg>
+      </div>
+      <div class="error-title">認証に失敗しました</div>
+      <p class="error-message">もう一度とるキャスから認証をやり直してください</p>
+    </div>
+  </div>
+
+  <script>
+    function getTokenFromUrl() {
+      const hash = window.location.hash.substring(1);
+      const params = new URLSearchParams(hash);
+      return params.get('access_token');
+    }
+
+    function copyToken() {
+      const token = getTokenFromUrl();
+      if (token) {
+        navigator.clipboard.writeText(token).then(() => {
+          const button = document.getElementById('copyButton');
+          button.textContent = 'コピーしました！';
+          button.classList.add('copied');
+          setTimeout(() => {
+            button.textContent = 'コピー';
+            button.classList.remove('copied');
+          }, 2000);
+        });
+      }
+    }
+
+    function init() {
+      const token = getTokenFromUrl();
+      const successEl = document.getElementById('success');
+      const errorEl = document.getElementById('error');
+      const tokenBox = document.getElementById('tokenBox');
+
+      if (token) {
+        successEl.classList.add('show');
+        tokenBox.textContent = token;
+      } else {
+        errorEl.classList.add('show');
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>
