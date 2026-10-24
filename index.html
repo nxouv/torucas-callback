@@ -1,240 +1,85 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>とるキャス - 認証完了</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Noto Sans JP', sans-serif;
-      background-color: #f9fafb;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-
-    .container {
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
-      padding: 40px;
-      max-width: 480px;
-      width: 100%;
-      text-align: center;
-    }
-
-    .icon {
-      width: 64px;
-      height: 64px;
-      margin: 0 auto 24px;
-    }
-
-    .icon svg {
-      width: 100%;
-      height: 100%;
-    }
-
-    h1 {
-      font-size: 20px;
-      font-weight: 700;
-      color: #1f2937;
-      margin-bottom: 8px;
-    }
-
-    .description {
-      font-size: 14px;
-      color: #6b7280;
-      margin-bottom: 24px;
-    }
-
-    .token-label {
-      font-size: 12px;
-      font-weight: 500;
-      color: #6b7280;
-      text-align: left;
-      margin-bottom: 8px;
-    }
-
-    .token-box {
-      background: #f3f4f6;
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
-      padding: 12px 16px;
-      font-family: monospace;
-      font-size: 13px;
-      color: #374151;
-      word-break: break-all;
-      text-align: left;
-      margin-bottom: 16px;
-      max-height: 80px;
-      overflow-y: auto;
-    }
-
-    .copy-button {
-      width: 100%;
-      padding: 14px 24px;
-      font-size: 15px;
-      font-weight: 600;
-      color: white;
-      background: #0ea5e9;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-
-    .copy-button:hover {
-      background: #0284c7;
-    }
-
-    .copy-button.copied {
-      background: #10b981;
-    }
-
-    .error-container {
-      display: none;
-    }
-
-    .error-container.show {
-      display: block;
-    }
-
-    .error-icon {
-      width: 48px;
-      height: 48px;
-      margin: 0 auto 16px;
-      color: #ef4444;
-    }
-
-    .error-title {
-      font-size: 18px;
-      font-weight: 700;
-      color: #1f2937;
-      margin-bottom: 8px;
-    }
-
-    .error-message {
-      font-size: 14px;
-      color: #6b7280;
-    }
-
-    .success-container {
-      display: none;
-    }
-
-    .success-container.show {
-      display: block;
-    }
-
-    .instructions {
-      background: #f0f9ff;
-      border-radius: 8px;
-      padding: 16px;
-      margin-top: 24px;
-      text-align: left;
-    }
-
-    .instructions-title {
-      font-size: 13px;
-      font-weight: 600;
-      color: #0369a1;
-      margin-bottom: 8px;
-    }
-
-    .instructions-text {
-      font-size: 13px;
-      color: #0c4a6e;
-      line-height: 1.6;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <!-- 成功時の表示 -->
-    <div id="success" class="success-container">
-      <div class="icon">
-  <img src="icon.png" alt="とるキャス" style="width: 100%; height: 100%; border-radius: 12px;">
-</div>
-
-      <h1>認証が完了しました</h1>
-      <p class="description">以下のアクセストークンをコピーして、とるキャスに貼り付けてください</p>
-      
-      <div class="token-label">アクセストークン</div>
-      <div id="tokenBox" class="token-box"></div>
-      
-      <button id="copyButton" class="copy-button" onclick="copyToken()">
-        コピー
-      </button>
-
-      <div class="instructions">
-        <div class="instructions-title">次のステップ</div>
-        <div class="instructions-text">
-          1. 上の「コピー」ボタンを押す<br>
-          2. とるキャスの設定画面に戻る<br>
-          3. アクセストークン欄に貼り付けて保存
-        </div>
-      </div>
-    </div>
-
-    <!-- エラー時の表示 -->
-    <div id="error" class="error-container">
-      <div class="error-icon">
-        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="4"/>
-          <path d="M24 14V26" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
-          <circle cx="24" cy="34" r="2" fill="currentColor"/>
-        </svg>
-      </div>
-      <div class="error-title">認証に失敗しました</div>
-      <p class="error-message">もう一度とるキャスから認証をやり直してください</p>
-    </div>
-  </div>
-
-  <script>
-    function getTokenFromUrl() {
-      const hash = window.location.hash.substring(1);
-      const params = new URLSearchParams(hash);
-      return params.get('access_token');
-    }
-
-    function copyToken() {
-      const token = getTokenFromUrl();
-      if (token) {
-        navigator.clipboard.writeText(token).then(() => {
-          const button = document.getElementById('copyButton');
-          button.textContent = 'コピーしました！';
-          button.classList.add('copied');
-          setTimeout(() => {
-            button.textContent = 'コピー';
-            button.classList.remove('copied');
-          }, 2000);
-        });
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="referrer" content="no-referrer" />
+    <title>とるキャス — 認証完了</title>
+    <style>
+      body {
+        margin: 0;
+        background: #f9fafb;
+        color: #374151;
+        font:
+          15px/1.7 system-ui,
+          sans-serif;
+        display: grid;
+        place-items: center;
+        min-height: 100vh;
       }
-    }
-
-    function init() {
-      const token = getTokenFromUrl();
-      const successEl = document.getElementById('success');
-      const errorEl = document.getElementById('error');
-      const tokenBox = document.getElementById('tokenBox');
-
-      if (token) {
-        successEl.classList.add('show');
-        tokenBox.textContent = token;
-      } else {
-        errorEl.classList.add('show');
+      .card {
+        box-sizing: border-box;
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        padding: 32px;
+        width: min(480px, calc(100% - 32px));
       }
-    }
-
-    init();
-  </script>
-</body>
+      h1 {
+        font-size: 22px;
+        margin: 0 0 12px;
+      }
+      button,
+      input {
+        box-sizing: border-box;
+        width: 100%;
+        margin: 8px 0;
+        padding: 12px;
+        border-radius: 8px;
+        border: 1px solid #d1d5db;
+        font: inherit;
+      }
+      button {
+        cursor: pointer;
+        background: #0ea5e9;
+        color: white;
+        border: 0;
+      }
+      button.secondary {
+        background: #f3f4f6;
+        color: #374151;
+      }
+      button:focus-visible,
+      input:focus-visible {
+        outline: 3px solid #0369a1;
+        outline-offset: 2px;
+      }
+      .small {
+        font-size: 12px;
+        color: #6b7280;
+      }
+      [hidden] {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="card">
+      <h1 id="title">認証情報を確認しています</h1>
+      <p id="message" role="status"></p>
+      <section id="success" hidden>
+        <p id="expiry"></p>
+        <button id="return">とるキャスに戻る</button>
+        <p class="small">ブラウザの確認が表示されたら、とるキャスを開く操作を選択してください。</p>
+        <button id="copy">期限付きの認証情報をコピー</button>
+        <p class="small">
+          戻れない場合は、コピーした認証情報をとるキャスの設定に貼り付けて保存してください。
+        </p>
+        <label for="token">旧版向けアクセストークン</label>
+        <input id="token" type="password" readonly />
+        <button id="legacy" class="secondary">旧版向けトークンをコピー</button>
+      </section>
+    </main>
+    <script src="callback.js"></script>
+  </body>
 </html>
